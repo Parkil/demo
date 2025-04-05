@@ -8,7 +8,7 @@ import org.hibernate.annotations.Comment
 
 @Entity
 class FeatureInfo(
-    @Id @Comment("기능 식별 코드") val code: String,
+    @Id @Comment("기능 식별 코드") private val code: String,
     name: String,
     limitCondition: LimitCondition,
     deductionCredit: DeductionCredit,
@@ -33,6 +33,10 @@ class FeatureInfo(
         other as FeatureInfo
 
         return code == other.code
+    }
+
+    fun getCode(): String {
+        return code
     }
 
     override fun hashCode(): Int {

@@ -17,7 +17,7 @@ class ServicePricing(
     var name: String = name
         protected set
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = [(CascadeType.ALL)])
+    @ManyToMany(fetch = FetchType.LAZY, cascade = [(CascadeType.ALL)])
     protected val featureList: MutableList<FeatureInfo> = mutableListOf()
     val features: List<FeatureInfo> get() = featureList.toList()
 
@@ -40,5 +40,9 @@ class ServicePricing(
 
     override fun hashCode(): Int {
         return id.hashCode()
+    }
+
+    override fun toString(): String {
+        return "ServicePricing(id=$id, name='$name', featureList=$featureList)"
     }
 }

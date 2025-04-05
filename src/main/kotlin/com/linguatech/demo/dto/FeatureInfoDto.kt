@@ -9,7 +9,7 @@ import com.linguatech.demo.entity.FeatureInfo
     val deductionCredit: String,
 ) {
     constructor(entity: FeatureInfo) : this(
-        code = entity.code,
+        code = entity.getCode(),
         name = entity.name,
         limitCondition = entity.limitCondition.toFormatStr(),
         deductionCredit = entity.deductionCredit.toFormatStr(),

@@ -35,7 +35,7 @@ class FeatureInfoRepoTest {
         testEntityManager.persistAndFlush(featureInfo)
         testEntityManager.detach(featureInfo)
 
-        val actual = featureInfoRepo.getReferenceById(featureInfo.code)
+        val actual = featureInfoRepo.getReferenceById(featureInfo.getCode())
         assertEquals("AI 번역", actual.name)
     }
 
@@ -55,12 +55,5 @@ class FeatureInfoRepoTest {
         log.info("actual : {}", actual)
 
         assertEquals("또 다른 AI 번역", actual.name)
-    }
-
-    @DisplayName("리스트 테스트")
-    @Test
-    fun listTest() {
-        val list: List<FeatureInfo> = featureInfoRepo.findAll()
-        System.out.println(list)
     }
 }

@@ -2,6 +2,8 @@ package com.linguatech.demo.controller
 
 import com.linguatech.demo.dto.CompanyDto
 import com.linguatech.demo.dto.FeatureInfoDto
+import com.linguatech.demo.dto.ServicePricingResultDto
+import com.linguatech.demo.param_dto.ServicePriceCreateDto
 import com.linguatech.demo.service.DemoService
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -18,10 +20,9 @@ class DemoController(
     //서비스 요금제 생성
     @PostMapping(value = ["/policies/service_pricing"])
     fun createServicePricing(
-        @RequestBody param: Map<String, String>,
-    ): ResponseEntity<String> {
-        log.info("createServicePricing param : {}", param)
-        return ResponseEntity<String>("createServicePricing", HttpStatus.OK)
+        @RequestBody param: ServicePriceCreateDto,
+    ): ResponseEntity<ServicePricingResultDto> {
+        return ResponseEntity<ServicePricingResultDto>(demoService.createServicePrice(param), HttpStatus.OK)
     }
 
     //서비스 요금제 조회
