@@ -3,6 +3,7 @@ package com.linguatech.demo.controller
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.linguatech.demo.dto.CompanyDto
+import com.linguatech.demo.dto.ExceptionResponseDto
 import com.linguatech.demo.dto.FeatureInfoDto
 import com.linguatech.demo.dto.ServicePricingResultDto
 import com.linguatech.demo.param_dto.ServicePriceCreateDto
@@ -77,11 +78,11 @@ class DemoControllerTest {
         val jsonStr: String = jacksonObjectMapper().writeValueAsString(servicePriceCreateDto)
 
         val result: MvcResult = mockMvc.perform(post("/policies/service_pricing").contentType(MediaType.APPLICATION_JSON).content(jsonStr))
-            .andExpect(status().isOk).andReturn()
+            .andExpect(status().isBadRequest).andReturn()
 
         val objectMapper = jacksonObjectMapper()
-        val convertResult: ServicePricingResultDto = objectMapper.readValue(result.response.contentAsString, object: TypeReference<ServicePricingResultDto>() {})
+        val convertResult: ExceptionResponseDto = objectMapper.readValue(result.response.contentAsString, object: TypeReference<ExceptionResponseDto>() {})
 
-        assertEquals("테스트 요금제111", convertResult.name)
+        assertEquals("invalid feature codes : [F_999]", convertResult.message)
     }
 }
