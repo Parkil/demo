@@ -1,5 +1,5 @@
 package com.linguatech.demo.enum
 
-enum class DeductionCriteria {
-    PER_ONE_USE, // 1회당
+enum class DeductionCriteria(val formatStr: String) {
+    PER_ONE_USE("1회"), // 1회당
 }

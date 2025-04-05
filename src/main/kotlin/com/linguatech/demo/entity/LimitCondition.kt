@@ -28,6 +28,10 @@ class LimitCondition(
     var restrictionCriteria: RestrictionCriteria = restrictionCriteria
         protected set
 
+    fun toFormatStr(): String {
+        return "$limitedAmount${restrictionCriteria.formatStr} / ${usageCriteria.formatStr}"
+    }
+
     override fun toString(): String {
         return "LimitCondition(limitedAmount=$limitedAmount, usageCriteria=$usageCriteria, restrictionCriteria=$restrictionCriteria)"
     }

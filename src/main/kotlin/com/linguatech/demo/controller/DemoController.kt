@@ -1,7 +1,8 @@
 package com.linguatech.demo.controller
 
-import com.linguatech.demo.dto.TestDto
-import com.linguatech.demo.entity.UsageLog
+import com.linguatech.demo.dto.CompanyDto
+import com.linguatech.demo.dto.FeatureInfoDto
+import com.linguatech.demo.service.DemoService
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -9,7 +10,9 @@ import org.springframework.web.bind.annotation.*
 
 
 @RestController
-class DemoController {
+class DemoController(
+    private val demoService: DemoService,
+) {
     private val log = LoggerFactory.getLogger(this.javaClass)!!
 
     //서비스 요금제 생성
@@ -23,10 +26,7 @@ class DemoController {
 
     //서비스 요금제 조회
     @GetMapping(value = ["/policies/service_pricing"])
-    fun findServicePricing(
-        @RequestBody param: Map<String, String>,
-    ): ResponseEntity<String> {
-        log.info("findServicePricing param : {}", param)
+    fun findServicePricing(): ResponseEntity<String> {
         return ResponseEntity<String>("findServicePricing", HttpStatus.OK)
     }
 
@@ -45,12 +45,14 @@ class DemoController {
 
     //회사 정보 조회
     @GetMapping(value = ["/companies"])
-    fun findCompany(
-        @RequestBody param: Map<String, String>,
-    ): ResponseEntity<String> {
-        // todo 회사 정보 + 현재 사용중인 기능 정보를 같이 반환
-        log.info("findCompany param : {}", param)
-        return ResponseEntity<String>("findCompany", HttpStatus.OK)
+    fun findCompanies(): ResponseEntity<List<CompanyDto>> {
+        return ResponseEntity<List<CompanyDto>>(demoService.findCompanies(), HttpStatus.OK)
+    }
+
+    //기본 기능 리스트 조회
+    @GetMapping(value = ["/features"])
+    fun findFeatures(): ResponseEntity<List<FeatureInfoDto>> {
+        return ResponseEntity<List<FeatureInfoDto>>(demoService.findFeatures(), HttpStatus.OK)
     }
 
     //기능 사용 처리

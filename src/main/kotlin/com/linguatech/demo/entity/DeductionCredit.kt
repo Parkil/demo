@@ -21,6 +21,10 @@ class DeductionCredit(
     var deductionCriteria: DeductionCriteria = deductionCriteria
         protected set
 
+    fun toFormatStr(): String {
+        return "$deductionCredits 크레딧 / ${deductionCriteria.formatStr}"
+    }
+
     override fun toString(): String {
         return "DeductionCredit(deductionCredits=$deductionCredits, deductionCriteria=$deductionCriteria)"
     }

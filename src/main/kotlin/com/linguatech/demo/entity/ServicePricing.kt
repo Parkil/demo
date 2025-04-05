@@ -14,7 +14,7 @@ class ServicePricing(
 
     @Column(nullable = false)
     @Comment("서비스 요금제 명")
-    var name: String? = name
+    var name: String = name
         protected set
 
     @OneToMany(fetch = FetchType.LAZY, cascade = [(CascadeType.ALL)])
@@ -23,6 +23,10 @@ class ServicePricing(
 
     fun pickFeatures(features: List<FeatureInfo>) {
         featureList.addAll(features)
+    }
+
+    fun getId(): Long {
+        return id
     }
 
     override fun equals(other: Any?): Boolean {

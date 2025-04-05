@@ -19,24 +19,29 @@ class FeatureInterceptor(
     private val transactionStatusHolder: ThreadLocal<TransactionStatus> = ThreadLocal<TransactionStatus>()
 
     override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
-        // Start a transaction
-        val transactionStatus = transactionManager.getTransaction(DefaultTransactionDefinition())
+        // 트랜젝션 시작
+        val transactionDefinition = DefaultTransactionDefinition()
+        transactionDefinition.setIsolationLevelName("ISOLATION_REPEATABLE_READ")
+
+        val transactionStatus = transactionManager.getTransaction(transactionDefinition)
         transactionStatusHolder.set(transactionStatus)
 
-        // Bind transaction to the current thread
+        //
         TransactionSynchronizationManager.bindResource(transactionManager, transactionStatus)
 
-        log.info("Transaction started: {}", transactionStatus)
+        log.info("Transaction started: {}, {}", transactionStatus.hashCode(), transactionStatus.isNewTransaction)
 
         return true
     }
 
     override fun afterCompletion(request: HttpServletRequest, response: HttpServletResponse, handler: Any, ex: Exception?) {
         val transactionStatus = transactionStatusHolder.get()
+
+        // 트랜젝션 종료
         if (transactionStatus != null) {
             try {
                 if (ex == null) {
-                    log.info("Committing transaction: {}", transactionStatus)
+                    log.info("Committing transaction: {}", transactionStatus.hashCode())
                     transactionManager.commit(transactionStatus)
                 } else {
                     log.info("Rolling back transaction due to exception: {}", ex.message)
