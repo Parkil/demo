@@ -1,0 +1,13 @@
+services:
+  db:
+    ports: [3306:3306]
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: aaa000
+      MYSQL_DATABASE: demo
+      MYSQL_USER: demo_user
+      MYSQL_PASSWORD: demo123!
+
+      
+
