@@ -2,6 +2,7 @@ package com.linguatech.demo.controller
 
 import com.linguatech.demo.dto.CompanyDto
 import com.linguatech.demo.dto.FeatureInfoDto
+import com.linguatech.demo.dto.ServicePricingDto
 import com.linguatech.demo.dto.ServicePricingResultDto
 import com.linguatech.demo.param_dto.ServicePriceCreateDto
 import com.linguatech.demo.service.DemoService
@@ -27,8 +28,8 @@ class DemoController(
 
     //서비스 요금제 조회
     @GetMapping(value = ["/policies/service_pricing"])
-    fun findServicePricing(): ResponseEntity<String> {
-        return ResponseEntity<String>("findServicePricing", HttpStatus.OK)
+    fun findServicePricing(): ResponseEntity<List<ServicePricingDto>> {
+        return ResponseEntity<List<ServicePricingDto>>(demoService.findServicePrices(), HttpStatus.OK)
     }
 
     //기업-서비스 요금제 연결
