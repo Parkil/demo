@@ -9,6 +9,7 @@ import com.linguatech.demo.param_dto.ServicePriceCreateDto
 import com.linguatech.demo.repo.CompanyRepo
 import com.linguatech.demo.repo.FeatureInfoRepo
 import com.linguatech.demo.repo.ServicePricingRepo
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Isolation
@@ -22,6 +23,8 @@ class DemoService(
     val featureInfoRepo: FeatureInfoRepo,
     val servicePricingRepo: ServicePricingRepo
 ) {
+    private val log = LoggerFactory.getLogger(this.javaClass)!!
+
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
     fun createServicePrice(servicePriceCreateDto: ServicePriceCreateDto): ServicePricingResultDto {
         val features : MutableList<FeatureInfo> = featureInfoRepo.findAll()
@@ -70,18 +73,67 @@ class DemoService(
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
     fun connectServicePricing(companyId: Long, servicePricingId: Long): ConnectServicePricingResultDto {
         val servicePricing: Optional<ServicePricing> = servicePricingRepo.findById(servicePricingId)
-        val company: Optional<Company> = companyRepo.findById(companyId)
+        val company: Company = findCompany(companyId)
 
         if (!servicePricing.isPresent) {
             throw CustomException("invalid service pricing id : $servicePricingId", HttpStatus.BAD_REQUEST)
         }
 
+        company.connectServicePricing(servicePricing.get())
+
+        return ConnectServicePricingResultDto(company.getId(), servicePricing.get().getId(), servicePricing.get().name)
+    }
+
+    private fun findCompany(companyId: Long): Company {
+        val company: Optional<Company> = companyRepo.findById(companyId)
+
         if (!company.isPresent) {
             throw CustomException("invalid company id : $companyId", HttpStatus.BAD_REQUEST)
         }
 
-        company.get().connectServicePricing(servicePricing.get())
+        return company.get()
+    }
 
-        return ConnectServicePricingResultDto(company.get().getId(), servicePricing.get().getId(), servicePricing.get().name)
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
+    fun useFeature(companyId: Long, featureCode: String): UseFeatureResultDto {
+        val company: Company = findCompany(companyId)
+        val featureInfo: FeatureInfo = findFeature(company, featureCode)
+        // todo 사용량 제한 체크 기능 추가
+        chkCreditAccount(company, featureInfo)
+        runFeature(featureInfo)
+        payCredit(company, featureInfo)
+
+        return UseFeatureResultDto(1, companyId, featureCode)
+    }
+
+    private fun findFeature(company: Company, featureCode: String): FeatureInfo {
+        val servicePricing: ServicePricing = company.servicePricing
+            ?: throw CustomException("no service price exists", HttpStatus.FORBIDDEN)
+
+        val chkList: List<FeatureInfo>  = servicePricing.features.filter { featureCode == it.getCode() }.toList()
+
+        if (chkList.isEmpty()) {
+            throw CustomException("execution permission does not exist. feature code : $featureCode", HttpStatus.FORBIDDEN)
+        }
+
+        return chkList[0]
+    }
+
+    private fun chkCreditAccount(company: Company, featureInfo: FeatureInfo) {
+        val currentCredits: Int = company.credits
+        val payCredits: Int = featureInfo.deductionCredit.deductionCredits
+
+        if (payCredits > currentCredits) {
+            throw CustomException("insufficient credits. company credits: $currentCredits", HttpStatus.FORBIDDEN)
+        }
+    }
+
+    private fun runFeature(featureInfo: FeatureInfo) {
+        log.info("run feature. feature code : ${featureInfo.getCode()}")
+    }
+    
+    private fun payCredit(company: Company, featureInfo: FeatureInfo) {
+        company.payFeature(featureInfo)
+        companyRepo.save(company)
     }
 }

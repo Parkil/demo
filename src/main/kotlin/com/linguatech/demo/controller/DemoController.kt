@@ -51,23 +51,12 @@ class DemoController(
     }
 
     //기능 사용 처리
-    @PostMapping(value = ["/companies/{companyId}/feature/{featureId}"])
+    @PostMapping(value = ["/companies/{companyId}/feature/{featureCode}"])
     fun useFeature(
-        @RequestBody param: Map<String, String>,
-        @PathVariable companyId: String,
-        @PathVariable featureId: String,
-    ): ResponseEntity<String> {
-        log.info("useFeature param : {}", param)
-        log.info("companyId : {}", companyId)
-        log.info("featureId : {}", featureId)
-
-        val dummyKey: String? = param.get("id")
-
-        if("error".equals(dummyKey)){
-            throw RuntimeException("고의로 일으킨 예외")
-        }
-
-        return ResponseEntity<String>("useFeature", HttpStatus.OK)
+        @PathVariable companyId: Long,
+        @PathVariable featureCode: String,
+    ): ResponseEntity<UseFeatureResultDto> {
+        return ResponseEntity<UseFeatureResultDto>(demoService.useFeature(companyId, featureCode), HttpStatus.OK)
     }
 
     //사용 통계 조회

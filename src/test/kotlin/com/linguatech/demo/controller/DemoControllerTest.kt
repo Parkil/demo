@@ -101,6 +101,22 @@ class DemoControllerTest {
         assertEquals("feature code list is empty", convertResult.message)
     }
 
+    @DisplayName("POST /policies/service_pricing 테스트 - 중복된 기능 코드")
+    @Test
+    fun createServicePolicyDuplicateFeatureCodeTest() {
+        val servicePriceCreateDto = ServicePriceCreateDto("중복 기능 코드 테스트 요금제", listOf("F_03", "F_04", "F_03"))
+        val jsonStr: String = jacksonObjectMapper().writeValueAsString(servicePriceCreateDto)
+
+        val result: MvcResult = mockMvc.perform(post("/policies/service_pricing").contentType(MediaType.APPLICATION_JSON).content(jsonStr))
+            .andExpect(status().isOk).andReturn()
+
+        val objectMapper = jacksonObjectMapper()
+        val convertResult: ServicePricingResultDto = objectMapper.readValue(result.response.contentAsString, object: TypeReference<ServicePricingResultDto>() {})
+
+        assertEquals("중복 기능 코드 테스트 요금제", convertResult.name)
+    }
+
+
     @DisplayName("GET /policies/service_pricing 테스트")
     @Test
     fun findServicePricingTest() {
@@ -150,5 +166,19 @@ class DemoControllerTest {
         val convertResult: ExceptionResponseDto = objectMapper.readValue(result.response.contentAsString, object: TypeReference<ExceptionResponseDto>() {})
 
         assertEquals("invalid service pricing id : -999", convertResult.message)
+    }
+
+    @DisplayName("POST /companies/{companyId}/feature/{featureCode} 테스트")
+    @Test
+    fun featureUseTest() {
+        val result: MvcResult = mockMvc.perform(post("/companies/1/feature/F_01").contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk).andReturn()
+
+        print(result.response.contentAsString)
+
+//        val objectMapper = jacksonObjectMapper()
+//        val convertResult: ExceptionResponseDto = objectMapper.readValue(result.response.contentAsString, object: TypeReference<ExceptionResponseDto>() {})
+
+//        assertEquals("invalid service pricing id : -999", convertResult.message)
     }
 }

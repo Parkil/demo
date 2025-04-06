@@ -35,6 +35,20 @@ class Company(
         return id
     }
 
+    fun payFeature(featureInfo: FeatureInfo) {
+        if (connectedServicePricing == null) {
+            return
+        }
+
+        val chkList: List<FeatureInfo> =
+            connectedServicePricing!!.features.filter { it.getCode() == featureInfo.getCode() }.toList()
+
+        if (chkList.isNotEmpty()) {
+            val payCredit: Int = chkList[0].deductionCredit.deductionCredits
+            this.credits -= payCredit
+        }
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

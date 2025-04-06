@@ -11,7 +11,6 @@ class InterceptorConfig(
 ) : WebMvcConfigurer {
 
     override fun addInterceptors(registry: InterceptorRegistry) {
-        registry.addInterceptor(featureInterceptor)
-            .addPathPatterns("/companies/**/feature/**")
+
     }
 }
