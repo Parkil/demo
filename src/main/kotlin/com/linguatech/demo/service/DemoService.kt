@@ -1,9 +1,6 @@
 package com.linguatech.demo.service
 
-import com.linguatech.demo.dto.CompanyDto
-import com.linguatech.demo.dto.FeatureInfoDto
-import com.linguatech.demo.dto.ServicePricingDto
-import com.linguatech.demo.dto.ServicePricingResultDto
+import com.linguatech.demo.dto.*
 import com.linguatech.demo.entity.Company
 import com.linguatech.demo.entity.FeatureInfo
 import com.linguatech.demo.entity.ServicePricing
@@ -12,12 +9,13 @@ import com.linguatech.demo.param_dto.ServicePriceCreateDto
 import com.linguatech.demo.repo.CompanyRepo
 import com.linguatech.demo.repo.FeatureInfoRepo
 import com.linguatech.demo.repo.ServicePricingRepo
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.bind.annotation.PathVariable
+import java.util.*
 
 @Service
 class DemoService(
@@ -68,5 +66,23 @@ class DemoService(
     fun findFeatures(): List<FeatureInfoDto> {
         val mutableList : MutableList<FeatureInfo> = featureInfoRepo.findAll()
         return mutableList.map { FeatureInfoDto(it) }.toList()
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
+    fun connectServicePricing(companyId: Long, servicePricingId: Long): ConnectServicePricingResultDto {
+        val servicePricing: Optional<ServicePricing> = servicePricingRepo.findById(servicePricingId)
+        val company: Optional<Company> = companyRepo.findById(companyId)
+
+        if (!servicePricing.isPresent) {
+            throw CustomException("invalid service pricing id : $servicePricingId", HttpStatus.BAD_REQUEST)
+        }
+
+        if (!company.isPresent) {
+            throw CustomException("invalid company id : $companyId", HttpStatus.BAD_REQUEST)
+        }
+
+        company.get().connectServicePricing(servicePricing.get())
+
+        return ConnectServicePricingResultDto(company.get().getId(), servicePricing.get().getId(), servicePricing.get().name)
     }
 }

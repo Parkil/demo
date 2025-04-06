@@ -1,9 +1,6 @@
 package com.linguatech.demo.controller
 
-import com.linguatech.demo.dto.CompanyDto
-import com.linguatech.demo.dto.FeatureInfoDto
-import com.linguatech.demo.dto.ServicePricingDto
-import com.linguatech.demo.dto.ServicePricingResultDto
+import com.linguatech.demo.dto.*
 import com.linguatech.demo.param_dto.ServicePriceCreateDto
 import com.linguatech.demo.service.DemoService
 import org.slf4j.LoggerFactory
@@ -35,14 +32,10 @@ class DemoController(
     //기업-서비스 요금제 연결
     @PutMapping(value = ["/companies/{companyId}/service_pricing/{servicePricingId}"])
     fun connectServicePricing(
-        @RequestBody param: Map<String, String>,
-        @PathVariable companyId: String,
-        @PathVariable servicePricingId: String,
-    ): ResponseEntity<String> {
-        log.info("connectServicePricing param : {}", param)
-        log.info("companyId param : {}", companyId)
-        log.info("servicePricingId param : {}", servicePricingId)
-        return ResponseEntity<String>("connectServicePricing", HttpStatus.OK)
+        @PathVariable companyId: Long,
+        @PathVariable servicePricingId: Long,
+    ): ResponseEntity<ConnectServicePricingResultDto> {
+        return ResponseEntity<ConnectServicePricingResultDto>(demoService.connectServicePricing(companyId, servicePricingId), HttpStatus.OK)
     }
 
     //회사 정보 조회

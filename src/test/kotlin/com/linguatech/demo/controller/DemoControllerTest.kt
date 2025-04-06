@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.linguatech.demo.dto.*
 import com.linguatech.demo.param_dto.ServicePriceCreateDto
+import com.linguatech.demo.repo.CompanyRepo
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
@@ -15,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.MvcResult
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -114,5 +116,42 @@ class DemoControllerTest {
         log.info("result: $convertResult")
 
         assertNotEquals(0, convertResult.size)
+    }
+
+    @DisplayName("PUT /companies/{companyId}/service_pricing/{servicePricingId} 테스트 - 정상")
+    @Test
+    fun connectServicePricingTest() {
+        val result: MvcResult = mockMvc.perform(put("/companies/1/service_pricing/1").contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk).andReturn()
+
+        val objectMapper = jacksonObjectMapper()
+        val convertResult: ConnectServicePricingResultDto = objectMapper.readValue(result.response.contentAsString, object: TypeReference<ConnectServicePricingResultDto>() {})
+
+        assertEquals(1, convertResult.companyId)
+        assertEquals(1, convertResult.servicePricingId)
+    }
+
+    @DisplayName("PUT /companies/{companyId}/service_pricing/{servicePricingId} 테스트 - 비정상적인 company id")
+    @Test
+    fun connectServicePricingInvalidCompanyIdTest() {
+        val result: MvcResult = mockMvc.perform(put("/companies/-999/service_pricing/1").contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest).andReturn()
+
+        val objectMapper = jacksonObjectMapper()
+        val convertResult: ExceptionResponseDto = objectMapper.readValue(result.response.contentAsString, object: TypeReference<ExceptionResponseDto>() {})
+
+        assertEquals("invalid company id : -999", convertResult.message)
+    }
+
+    @DisplayName("PUT /companies/{companyId}/service_pricing/{servicePricingId} 테스트 - 비정상적인 servicePricing id")
+    @Test
+    fun connectServicePricingInvalidServicePricingTest() {
+        val result: MvcResult = mockMvc.perform(put("/companies/1/service_pricing/-999").contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest).andReturn()
+
+        val objectMapper = jacksonObjectMapper()
+        val convertResult: ExceptionResponseDto = objectMapper.readValue(result.response.contentAsString, object: TypeReference<ExceptionResponseDto>() {})
+
+        assertEquals("invalid service pricing id : -999", convertResult.message)
     }
 }
