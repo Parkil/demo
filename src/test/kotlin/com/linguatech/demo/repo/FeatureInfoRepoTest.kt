@@ -30,7 +30,6 @@ class FeatureInfoRepoTest {
     fun insertTest() {
         val limitCondition = LimitCondition(2000, UsageCriteria.PER_ONE_USE, RestrictionCriteria.NUMBER_OF_CHAR)
         val deductionCredit = DeductionCredit(10, DeductionCriteria.PER_ONE_USE)
-
         val featureInfo = FeatureInfo("F_01", "AI 번역", limitCondition, deductionCredit)
         testEntityManager.persistAndFlush(featureInfo)
         testEntityManager.detach(featureInfo)
@@ -55,5 +54,30 @@ class FeatureInfoRepoTest {
         log.info("actual : {}", actual)
 
         assertEquals("또 다른 AI 번역", actual.name)
+    }
+
+    @DisplayName("기능 수정 테스트")
+    @Test
+    fun dummy111() {
+        val limitCondition1 = LimitCondition(2000, UsageCriteria.PER_ONE_USE, RestrictionCriteria.NUMBER_OF_CHAR)
+        val deductionCredit1 = DeductionCredit(10, DeductionCriteria.PER_ONE_USE)
+        val featureInfo1 = FeatureInfo("F_01", "AI 번역", limitCondition1, deductionCredit1)
+
+        val limitCondition2 = LimitCondition(1000, UsageCriteria.PER_ONE_USE, RestrictionCriteria.NUMBER_OF_CHAR)
+        val deductionCredit2 = DeductionCredit(10, DeductionCriteria.PER_ONE_USE)
+        val featureInfo2 = FeatureInfo("F_02", "AI 교정", limitCondition2, deductionCredit2)
+
+        val limitCondition3 = LimitCondition(1500, UsageCriteria.PER_ONE_USE, RestrictionCriteria.NUMBER_OF_CHAR)
+        val deductionCredit3 = DeductionCredit(20, DeductionCriteria.PER_ONE_USE)
+        val featureInfo3 = FeatureInfo("F_03", "AI 뉘앙스 조절", limitCondition3, deductionCredit3)
+
+        val limitCondition4 = LimitCondition(200, UsageCriteria.PER_ONE_MONTH, RestrictionCriteria.NUMBER_OF_USE)
+        val deductionCredit4 = DeductionCredit(50, DeductionCriteria.PER_ONE_USE)
+        val featureInfo4 = FeatureInfo("F_04", "AI 초안 ", limitCondition4, deductionCredit4)
+
+        featureInfoRepo.save(featureInfo1)
+        featureInfoRepo.save(featureInfo2)
+        featureInfoRepo.save(featureInfo3)
+        featureInfoRepo.save(featureInfo4)
     }
 }

@@ -2,6 +2,7 @@ package com.linguatech.demo.controller
 
 import com.linguatech.demo.dto.*
 import com.linguatech.demo.param_dto.ServicePriceCreateDto
+import com.linguatech.demo.param_dto.UseFeatureDto
 import com.linguatech.demo.service.DemoService
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -55,8 +56,9 @@ class DemoController(
     fun useFeature(
         @PathVariable companyId: Long,
         @PathVariable featureCode: String,
+        @RequestBody param: UseFeatureDto,
     ): ResponseEntity<UseFeatureResultDto> {
-        return ResponseEntity<UseFeatureResultDto>(demoService.useFeature(companyId, featureCode), HttpStatus.OK)
+        return ResponseEntity<UseFeatureResultDto>(demoService.useFeature(companyId, featureCode, param), HttpStatus.OK)
     }
 
     //사용 통계 조회

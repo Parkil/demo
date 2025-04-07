@@ -1,14 +1,19 @@
 package com.linguatech.demo.service
 
+import com.linguatech.demo.component.CheckCriteria
 import com.linguatech.demo.dto.*
 import com.linguatech.demo.entity.Company
 import com.linguatech.demo.entity.FeatureInfo
 import com.linguatech.demo.entity.ServicePricing
+import com.linguatech.demo.entity.UsageLog
+import com.linguatech.demo.enum.UsageCriteria
 import com.linguatech.demo.exception.CustomException
 import com.linguatech.demo.param_dto.ServicePriceCreateDto
+import com.linguatech.demo.param_dto.UseFeatureDto
 import com.linguatech.demo.repo.CompanyRepo
 import com.linguatech.demo.repo.FeatureInfoRepo
 import com.linguatech.demo.repo.ServicePricingRepo
+import com.linguatech.demo.repo.UsageLogRepo
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -21,7 +26,9 @@ import java.util.*
 class DemoService(
     val companyRepo: CompanyRepo,
     val featureInfoRepo: FeatureInfoRepo,
-    val servicePricingRepo: ServicePricingRepo
+    val servicePricingRepo: ServicePricingRepo,
+    val usageLogRepo: UsageLogRepo,
+    val checkCriteriaMap: Map<String, CheckCriteria>
 ) {
     private val log = LoggerFactory.getLogger(this.javaClass)!!
 
@@ -95,15 +102,16 @@ class DemoService(
     }
 
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
-    fun useFeature(companyId: Long, featureCode: String): UseFeatureResultDto {
-        val company: Company = findCompany(companyId)
+    fun useFeature(companyId: Long, featureCode: String, param: UseFeatureDto): UseFeatureResultDto {
+        var company: Company = findCompany(companyId)
         val featureInfo: FeatureInfo = findFeature(company, featureCode)
-        // todo 사용량 제한 체크 기능 추가
+        checkCriteria(company, featureInfo, param)
         chkCreditAccount(company, featureInfo)
         runFeature(featureInfo)
-        payCredit(company, featureInfo)
+        company = payCredit(company, featureInfo)
+        saveUsageLog(company, featureInfo)
 
-        return UseFeatureResultDto(1, companyId, featureCode)
+        return UseFeatureResultDto(company.getId(), featureInfo.getCode() ,company.credits)
     }
 
     private fun findFeature(company: Company, featureCode: String): FeatureInfo {
@@ -119,6 +127,14 @@ class DemoService(
         return chkList[0]
     }
 
+    private fun checkCriteria(company: Company, featureInfo: FeatureInfo, param: UseFeatureDto) {
+        val usageCriteria: UsageCriteria = featureInfo.limitCondition.usageCriteria
+        val checkCriteria: CheckCriteria = checkCriteriaMap[usageCriteria.componentName]
+            ?: throw CustomException("invalid component name : ${usageCriteria.componentName}", HttpStatus.INTERNAL_SERVER_ERROR)
+
+        checkCriteria.check(company, featureInfo, param)
+    }
+
     private fun chkCreditAccount(company: Company, featureInfo: FeatureInfo) {
         val currentCredits: Int = company.credits
         val payCredits: Int = featureInfo.deductionCredit.deductionCredits
@@ -132,8 +148,13 @@ class DemoService(
         log.info("run feature. feature code : ${featureInfo.getCode()}")
     }
     
-    private fun payCredit(company: Company, featureInfo: FeatureInfo) {
+    private fun payCredit(company: Company, featureInfo: FeatureInfo): Company {
         company.payFeature(featureInfo)
-        companyRepo.save(company)
+        return companyRepo.save(company)
+    }
+
+    private fun saveUsageLog(company: Company, featureInfo: FeatureInfo) {
+        val usageLog = UsageLog(company.getId(), featureInfo.getCode(), featureInfo.name, featureInfo.deductionCredit.deductionCredits)
+        usageLogRepo.save(usageLog)
     }
 }
