@@ -243,6 +243,30 @@ class DemoControllerTest {
         assertEquals("execution permission does not exist. feature code : F_03", convertResult.message)
     }
 
+    @DisplayName("POST /companies/{companyId}/feature/{featureCode} 테스트 - 월 사용회수 초과")
+    @Test
+    fun featureUseExceedMonthlyUseTest() {
+        val companyId = 1L
+        val featureCode = "F_04"
+
+        val useFeatureDto = UseFeatureDto("sample text")
+        val jsonStr: String = jacksonObjectMapper().writeValueAsString(useFeatureDto)
+
+        for(i: Int in 1..200)
+            mockMvc.perform(post("/companies/$companyId/feature/$featureCode")
+                .contentType(MediaType.APPLICATION_JSON).content(jsonStr))
+                .andExpect(status().isOk)
+
+        val result: MvcResult = mockMvc.perform(post("/companies/$companyId/feature/$featureCode")
+            .contentType(MediaType.APPLICATION_JSON).content(jsonStr))
+            .andExpect(status().isForbidden).andReturn()
+
+        val objectMapper = jacksonObjectMapper()
+        val convertResult: ExceptionResponseDto = objectMapper.readValue(result.response.contentAsString, object: TypeReference<ExceptionResponseDto>() {})
+
+        assertEquals("execution permission does not exist. feature code : F_03", convertResult.message)
+    }
+
     private fun getCreditArr(companyId: Long, featureCode: String): IntArray {
         val company: Optional<Company> = companyRepo.findById(companyId)
         val featureInfo: Optional<FeatureInfo> = featureInfoRepo.findById(featureCode)
