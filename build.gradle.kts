@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.linguatech"
-version = "0.0.1-SNAPSHOT"
+version = "1.0"
 
 java {
     toolchain {
@@ -38,6 +38,8 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     compileOnly("org.springframework.boot:spring-boot-devtools")
+
+    developmentOnly("org.springframework.boot:spring-boot-docker-compose")
 }
 
 kotlin {

@@ -8,6 +8,5 @@ services:
       MYSQL_DATABASE: demo
       MYSQL_USER: demo_user
       MYSQL_PASSWORD: demo123!
-
       
 

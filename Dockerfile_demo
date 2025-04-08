@@ -1,0 +1,19 @@
+FROM gradle:8.8.0-jdk21 AS builder  
+WORKDIR /usr/src/demo
+COPY ../build.gradle.kts .
+RUN gradle dependencies    
+    
+COPY .. .
+RUN gradle build -x test  
+    
+# app 
+FROM alpine/jre21 
+
+ENV SPRING_PROFILE=docker
+LABEL build_tag=latest
+    
+WORKDIR /app    
+COPY --from=builder /usr/src/demo/build/libs/demo-1.0.jar .
+
+EXPOSE 9000 
+ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=${SPRING_PROFILE}", "/app/demo-1.0.jar"]

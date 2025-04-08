@@ -1,0 +1,27 @@
+services:
+  standalone-db:
+    ports: [15000:15000]
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: aaa000
+      MYSQL_DATABASE: demo
+      MYSQL_USER: demo_user
+      MYSQL_PASSWORD: demo123!
+      MYSQL_TCP_PORT: 15000
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      timeout: 20s
+      retries: 10
+
+  demo:
+    ports: [9000:9000]
+    image: demo:latest
+    depends_on:
+      standalone-db:
+        restart: true
+        condition: service_healthy
+
+networks:
+  demo-net:
+
