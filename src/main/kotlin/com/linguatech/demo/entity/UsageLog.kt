@@ -8,6 +8,7 @@ import java.time.LocalDateTime
 @Entity
 class UsageLog(
     companyId: Long,
+    companyName: String,
     featureCode: String,
     featureName: String,
     usageCredit: Int,
@@ -19,6 +20,11 @@ class UsageLog(
     @Column(nullable = false)
     @Comment("회사 ID")
     var companyId: Long = companyId
+        protected set
+
+    @Column(nullable = false)
+    @Comment("회사 명")
+    var companyName: String = companyName
         protected set
 
     @Column(nullable = false)
@@ -54,6 +60,6 @@ class UsageLog(
     }
 
     override fun toString(): String {
-        return "UsageLog(id=$id, companyId=$companyId, featureCode='$featureCode', featureName='$featureName', usageCredit=$usageCredit, regDtm=$regDtm)"
+        return "UsageLog(id=$id, companyId=$companyId, companyName='$companyName', featureCode='$featureCode', featureName='$featureName', usageCredit=$usageCredit, regDtm=$regDtm)"
     }
 }

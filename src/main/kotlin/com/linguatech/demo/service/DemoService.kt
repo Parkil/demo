@@ -8,19 +8,23 @@ import com.linguatech.demo.entity.ServicePricing
 import com.linguatech.demo.entity.UsageLog
 import com.linguatech.demo.enum.UsageCriteria
 import com.linguatech.demo.exception.CustomException
+import com.linguatech.demo.param_dto.SearchUsageLogDto
 import com.linguatech.demo.param_dto.ServicePriceCreateDto
 import com.linguatech.demo.param_dto.UseFeatureDto
 import com.linguatech.demo.repo.CompanyRepo
 import com.linguatech.demo.repo.FeatureInfoRepo
 import com.linguatech.demo.repo.ServicePricingRepo
 import com.linguatech.demo.repo.UsageLogRepo
+import com.linguatech.demo.specification.UsageLogSpecification
 import org.slf4j.LoggerFactory
+import org.springframework.data.jpa.domain.Specification
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
+
 
 @Service
 class DemoService(
@@ -34,7 +38,7 @@ class DemoService(
 
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
     fun createServicePrice(servicePriceCreateDto: ServicePriceCreateDto): ServicePricingResultDto {
-        val features : MutableList<FeatureInfo> = featureInfoRepo.findAll()
+        val features: MutableList<FeatureInfo> = featureInfoRepo.findAll()
         val pickFeatures: List<FeatureInfo> = pickFeatures(servicePriceCreateDto.featureCodes, features)
 
         val servicePricing = ServicePricing(servicePriceCreateDto.name)
@@ -61,19 +65,19 @@ class DemoService(
 
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
     fun findServicePrices(): List<ServicePricingDto> {
-        val mutableList : MutableList<ServicePricing> = servicePricingRepo.findAll()
+        val mutableList: MutableList<ServicePricing> = servicePricingRepo.findAll()
         return mutableList.map { ServicePricingDto(it) }.toList()
     }
 
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
     fun findCompanies(): List<CompanyDto> {
-        val mutableList : MutableList<Company> = companyRepo.findAll()
+        val mutableList: MutableList<Company> = companyRepo.findAll()
         return mutableList.map { CompanyDto(it) }.toList()
     }
 
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
     fun findFeatures(): List<FeatureInfoDto> {
-        val mutableList : MutableList<FeatureInfo> = featureInfoRepo.findAll()
+        val mutableList: MutableList<FeatureInfo> = featureInfoRepo.findAll()
         return mutableList.map { FeatureInfoDto(it) }.toList()
     }
 
@@ -105,23 +109,27 @@ class DemoService(
     fun useFeature(companyId: Long, featureCode: String, param: UseFeatureDto): UseFeatureResultDto {
         var company: Company = findCompany(companyId)
         val featureInfo: FeatureInfo = findFeature(company, featureCode)
+
         checkCriteria(company, featureInfo, param)
         chkCreditAccount(company, featureInfo)
         runFeature(featureInfo)
         company = payCredit(company, featureInfo)
         saveUsageLog(company, featureInfo)
 
-        return UseFeatureResultDto(company.getId(), featureInfo.getCode() ,company.credits)
+        return UseFeatureResultDto(company.getId(), featureInfo.getCode(), company.credits)
     }
 
     private fun findFeature(company: Company, featureCode: String): FeatureInfo {
         val servicePricing: ServicePricing = company.servicePricing
             ?: throw CustomException("no service price exists", HttpStatus.FORBIDDEN)
 
-        val chkList: List<FeatureInfo>  = servicePricing.features.filter { featureCode == it.getCode() }.toList()
+        val chkList: List<FeatureInfo> = servicePricing.features.filter { featureCode == it.getCode() }.toList()
 
         if (chkList.isEmpty()) {
-            throw CustomException("execution permission does not exist. feature code : $featureCode", HttpStatus.FORBIDDEN)
+            throw CustomException(
+                "execution permission does not exist. feature code : $featureCode",
+                HttpStatus.FORBIDDEN
+            )
         }
 
         return chkList[0]
@@ -130,7 +138,10 @@ class DemoService(
     private fun checkCriteria(company: Company, featureInfo: FeatureInfo, param: UseFeatureDto) {
         val usageCriteria: UsageCriteria = featureInfo.limitCondition.usageCriteria
         val checkCriteria: CheckCriteria = checkCriteriaMap[usageCriteria.componentName]
-            ?: throw CustomException("invalid component name : ${usageCriteria.componentName}", HttpStatus.INTERNAL_SERVER_ERROR)
+            ?: throw CustomException(
+                "invalid component name : ${usageCriteria.componentName}",
+                HttpStatus.INTERNAL_SERVER_ERROR
+            )
 
         checkCriteria.check(company, featureInfo, param)
     }
@@ -147,14 +158,33 @@ class DemoService(
     private fun runFeature(featureInfo: FeatureInfo) {
         log.info("run feature. feature code : ${featureInfo.getCode()}")
     }
-    
+
     private fun payCredit(company: Company, featureInfo: FeatureInfo): Company {
         company.payFeature(featureInfo)
         return companyRepo.save(company)
     }
 
     private fun saveUsageLog(company: Company, featureInfo: FeatureInfo) {
-        val usageLog = UsageLog(company.getId(), featureInfo.getCode(), featureInfo.name, featureInfo.deductionCredit.deductionCredits)
+        val usageLog = UsageLog(
+            company.getId(),
+            company.name,
+            featureInfo.getCode(),
+            featureInfo.name,
+            featureInfo.deductionCredit.deductionCredits
+        )
         usageLogRepo.save(usageLog)
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.READ_COMMITTED)
+    fun findCompanyUsageHistory(companyId: Long, param: SearchUsageLogDto): StatisticsResultDto {
+        val usageLogSpecification = UsageLogSpecification()
+        val searchSpec: Specification<UsageLog> = Specification
+            .where<UsageLog>(usageLogSpecification.regDtmBetween(param.startDate.atStartOfDay(), param.endDate.atStartOfDay()))
+            .and(usageLogSpecification.featureCodesIn(param.featureCodes))
+
+        val searchList: List<UsageLog> = usageLogRepo.findAll(searchSpec)
+        val dtoList: List<UsageLogDto> = searchList.map{UsageLogDto(it)}.toList()
+
+        return StatisticsResultDto(companyId, dtoList)
     }
 }

@@ -1,10 +1,12 @@
 package com.linguatech.demo.controller
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.linguatech.demo.dto.*
 import com.linguatech.demo.entity.Company
 import com.linguatech.demo.entity.FeatureInfo
+import com.linguatech.demo.param_dto.SearchUsageLogDto
 import com.linguatech.demo.param_dto.ServicePriceCreateDto
 import com.linguatech.demo.param_dto.UseFeatureDto
 import com.linguatech.demo.repo.CompanyRepo
@@ -21,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.MvcResult
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.time.LocalDate
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -182,7 +185,7 @@ class DemoControllerTest {
     @Test
     fun featureUseTest() {
         val companyId = 1L
-        val featureCode = "F_01"
+        val featureCode = "F_03"
         val creditArr: IntArray = getCreditArr(companyId, featureCode)
         val prevLogCount: Int = usageLogRepo.findUsageLogCount(companyId, featureCode)
 
@@ -286,5 +289,25 @@ class DemoControllerTest {
             str += "1"
 
         return str
+    }
+
+    @DisplayName("GET /companies/{companyId}/usage_history 테스트")
+    @Test
+    fun companyHistoryTest() {
+        val companyId = 1L
+
+        val objectMapper = jacksonObjectMapper()
+        objectMapper.registerModules(JavaTimeModule())
+        val searchUsageLogDto = SearchUsageLogDto(LocalDate.of(2025, 4, 1), LocalDate.of(2025, 4, 30), null)
+        val jsonStr: String = objectMapper.writeValueAsString(searchUsageLogDto)
+
+        val result: MvcResult = mockMvc.perform(get("/companies/$companyId/usage_history")
+            .contentType(MediaType.APPLICATION_JSON).content(jsonStr))
+            .andExpect(status().isOk).andReturn()
+
+        val convertResult: StatisticsResultDto = objectMapper.readValue(result.response.contentAsString, object: TypeReference<StatisticsResultDto>() {})
+        log.info("convertResult: $convertResult")
+        assertEquals(companyId, convertResult.companyId)
+        assert(convertResult.historyList.isNotEmpty())
     }
 }

@@ -1,10 +1,10 @@
 package com.linguatech.demo.controller
 
 import com.linguatech.demo.dto.*
+import com.linguatech.demo.param_dto.SearchUsageLogDto
 import com.linguatech.demo.param_dto.ServicePriceCreateDto
 import com.linguatech.demo.param_dto.UseFeatureDto
 import com.linguatech.demo.service.DemoService
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -14,8 +14,6 @@ import org.springframework.web.bind.annotation.*
 class DemoController(
     private val demoService: DemoService,
 ) {
-    private val log = LoggerFactory.getLogger(this.javaClass)!!
-
     //서비스 요금제 생성
     @PostMapping(value = ["/policies/service_pricing"])
     fun createServicePricing(
@@ -61,13 +59,12 @@ class DemoController(
         return ResponseEntity<UseFeatureResultDto>(demoService.useFeature(companyId, featureCode, param), HttpStatus.OK)
     }
 
-    //사용 통계 조회
-    @GetMapping(value = ["/companies/{companyId}/statistics"])
-    fun findCompanyStatistics(
-        @RequestBody logParamDto: Map<String, String>,
-        @PathVariable companyId: String,
-    ): ResponseEntity<String> {
-        log.info("findCompanyStatistics param : {}", logParamDto)
-        return ResponseEntity<String>("findCompanyStatistics", HttpStatus.OK)
+    //사용 내역 조회
+    @GetMapping(value = ["/companies/{companyId}/usage_history"])
+    fun findCompanyUsageHistory(
+        @PathVariable companyId: Long,
+        @RequestBody param: SearchUsageLogDto,
+    ): ResponseEntity<StatisticsResultDto> {
+        return ResponseEntity<StatisticsResultDto>(demoService.findCompanyUsageHistory(companyId, param), HttpStatus.OK)
     }
 }
