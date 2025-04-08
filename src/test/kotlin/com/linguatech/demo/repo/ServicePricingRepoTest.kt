@@ -22,7 +22,7 @@ class ServicePricingRepoTest {
 
     private val log = LoggerFactory.getLogger(this.javaClass)!!
 
-    @DisplayName("입력 테스트")
+    @DisplayName("insert cascade 테스트")
     @Test
     fun insertTest() {
         val pickFeatureCodes: List<String> = listOf("F_01", "F_02")
