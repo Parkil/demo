@@ -285,6 +285,24 @@ class DemoControllerTest {
         assertEquals("insufficient credits. company credits: 0", convertResult.message)
     }
 
+    @DisplayName("POST /companies/{companyId}/feature/{featureCode} 테스트 - 중간에 요금제 변경")
+    @Test
+    fun featureUseChangeServicePriceTest() {
+        val companyId = 1L
+        val featureCode = "F_04"
+        val objectMapper = jacksonObjectMapper()
+
+        connectServicePrice(companyId, "일반 요금제-1", listOf("F_04"))
+        useFeature(companyId, featureCode, "sample text", status().isOk)
+
+        connectServicePrice(companyId, "일반 요금제-2", listOf("F_01", "F_02"))
+
+        val result = useFeature(companyId, featureCode, "sample text", status().isForbidden)
+        val convertResult: ExceptionResponseDto = objectMapper.readValue(result.response.contentAsString, object: TypeReference<ExceptionResponseDto>() {})
+
+        assertEquals("execution permission does not exist. feature code : F_04", convertResult.message)
+    }
+
     private fun useFeature(
         companyId: Long,
         featureCode: String,
