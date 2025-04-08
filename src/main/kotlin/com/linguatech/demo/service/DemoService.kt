@@ -175,7 +175,7 @@ class DemoService(
         usageLogRepo.save(usageLog)
     }
 
-    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.READ_COMMITTED)
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
     fun findCompanyUsageHistory(companyId: Long, param: SearchUsageLogDto): StatisticsResultDto {
         val usageLogSpecification = UsageLogSpecification()
         val searchSpec: Specification<UsageLog> = Specification
